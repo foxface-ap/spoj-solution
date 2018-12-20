@@ -1,71 +1,92 @@
 #include <bits/stdc++.h>
-    
-#define fastIO ios_base::sync_with_stdio(false);cin.tie(NULL)
+#include <ext/pb_ds/assoc_container.hpp> 
+#include <ext/pb_ds/tree_policy.hpp>
 
 using namespace std;
-    
-vector <int> segtree[400010];
-int a[100010];
-    
-void build(int nd, int st, int ed)
-{
-    if(st == ed)
-    {
-        segtree[nd].push_back(a[st]);
-        return;
-    }
-    
-    int mid = (st+ed)/2;
-    
-    build(2*nd,st,mid);
-    build(2*nd+1,mid+1,ed);
+using namespace __gnu_pbds;
 
-    segtree[nd].resize(segtree[2*nd].size()+segtree[2*nd+1].size());
+#define fastIO ios_base::sync_with_stdio(false);cin.tie(NULL)
+
+typedef tree <
+    int,
+    null_type,
+    less<int>,
+    rb_tree_tag,
+    tree_order_statistics_node_update
+> sset;
     
-    merge(segtree[2*nd].begin(),segtree[2*nd].end(),segtree[2*nd+1].begin(),
-            segtree[2*nd+1].end(),segtree[nd].begin());
-}
-    
-vector <int> quary(int nd, int st, int ed, int l, int r)
+int a[100010];
+int answers[100500];
+int BLOCK_SIZE;
+
+pair<tuple <int,int,int>, int> queries[100500];
+
+inline bool mo_cmp(const pair<tuple <int,int,int>, int> &x, const pair<tuple <int,int,int>, int> &y)
 {
-    int mid = (st+ed)/2;
-    
-    if(st >= l && ed <= r)
-        return segtree[nd];
-    else if(l > mid)
-        return quary(2*nd+1,mid+1,ed,l,r);
-    else if(r <= mid)
-        return quary(2*nd,st,mid,l,r);
-    else
-    {
-        vector <int> temp,t1,t2;
-        t1 = quary(2*nd,st,mid,l,r);
-        t2 = quary(2*nd+1,mid+1,ed,l,r);
-        temp.resize(t1.size()+t2.size());
-        merge(t1.begin(),t1.end(),t2.begin(),t2.end(),temp.begin());
-        return temp;
-    }
+    int block_x = get<0>(x.first) / BLOCK_SIZE;
+    int block_y = get<0>(y.first) / BLOCK_SIZE;
+    if(block_x != block_y)
+        return block_x < block_y;
+    return get<1>(x.first) < get<1>(y.first);
 }
     
-int main()
+int32_t main()
 {
     fastIO;
 
     int n,q;
     cin >> n >> q;
+
+    BLOCK_SIZE = static_cast<int>(sqrt(n));
     
     for(int i=0;i<n;i++)
         cin >> a[i];
     
-    build(1,0,n-1);
-
-    while(q--)
+    for(int i = 0; i < q; i++) 
     {
         int x,y,z;
         cin >> x >> y >> z;
-
-        vector <int> s = quary(1,0,n-1,x-1,y-1);
-
-        cout << s[z-1] << endl;
+        queries[i].first = make_tuple(x-1,y-1,z-1);
+        queries[i].second = i;
     }
+
+    sort(queries, queries + q, mo_cmp);
+    int mo_left = 0, mo_right = -1;
+    sset s;
+
+    for(int i = 0; i < q; i++) 
+    {
+        int left = get<0>(queries[i].first);
+        int right = get<1>(queries[i].first);
+
+        while(mo_right < right) 
+        {
+            mo_right++;
+            s.insert(a[mo_right]);
+        }
+
+        while(mo_right > right) 
+        {
+            s.erase(a[mo_right]);
+            mo_right--;
+        }
+
+        while(mo_left < left) 
+        {
+            s.erase(a[mo_left]);
+            mo_left++;
+        }
+
+        while(mo_left > left) 
+        {
+            mo_left--;
+            s.insert(a[mo_left]);
+        }
+
+        answers[queries[i].second] = *s.find_by_order(get<2>(queries[i].first));
+    }
+
+    for(int i = 0; i < q; i++)
+        cout << answers[i] << "\n";
+    return 0;
 } 

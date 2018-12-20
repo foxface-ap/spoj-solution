@@ -8,8 +8,7 @@ using namespace __gnu_pbds;
 #define fastIO ios_base::sync_with_stdio(false);cin.tie(NULL)
 #define pb push_back
 #define mp make_pair
-#define ll long long int
-#define ull unsigned long long int
+#define int long long
 
 typedef tree <
     int,
@@ -19,7 +18,7 @@ typedef tree <
     tree_order_statistics_node_update
 > sset;
 
-int main()
+int32_t main()
 {
     fastIO;
 
